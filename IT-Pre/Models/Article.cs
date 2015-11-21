@@ -26,5 +26,7 @@ namespace IT_Pre.Models
         //public DateTime Adate { get; set; }
 
         public int? Asubject1 { get; set; }
+
+        public virtual ArticleSubject ArticleSubject { get; set; }
     }
 }

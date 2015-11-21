@@ -17,5 +17,16 @@
         //}
 
         public virtual DbSet<Article> Articles { get; set; }
-    }
+        public virtual DbSet<ArticleSubject> ArticleSubjects { get; set; }
+
+        protected override void OnModelCreating(DbModelBuilder modelBuilder)
+        {
+
+            modelBuilder.Entity<ArticleSubject>()
+                .HasMany(e => e.Articles)
+                .WithRequired(e => e.ArticleSubject)
+                .HasForeignKey(e => e.Asubject1)
+                .WillCascadeOnDelete(false);
+        }
+        }
 }
