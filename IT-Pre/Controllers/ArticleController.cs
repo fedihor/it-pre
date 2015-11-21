@@ -34,6 +34,9 @@ namespace IT_Pre.Controllers
                 return HttpNotFound();
             }
 
+            var f = article.ArticleSubject.Asubject;
+            var fd = article.Asubject1;
+
             article.Articletext = ReplaceSpecialTags(EncodeString(article.Articletext));
 
             ViewBag.Articletext = article.Articletext;
@@ -45,6 +48,7 @@ namespace IT_Pre.Controllers
         [Authorize]
         public ActionResult Create()
         {
+            ViewBag.Asubject1 = new SelectList(db.ArticleSubjects, "Id", "Asubject", 1);
             return View();
         }
 

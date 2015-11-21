@@ -7,7 +7,6 @@
 <script type="text/javascript" src="~/Scripts/site.js"></script>
 <input type="button" value="code" onclick="insertTag(document.getElementById('Articletext'), '<к>', '<\/к>');">
 <h2>Create</h2>
-
 @using (Html.BeginForm())
 {
     @Html.AntiForgeryToken()
@@ -30,18 +29,14 @@
                 @Html.ValidationMessageFor(model => model.Articletext, "", new { @class = "text-danger" })
             </div>
         </div>
-
         <div class="form-group">
             @Html.LabelFor(model => model.Asubject1, htmlAttributes: new { @class = "control-label col-md-2" })
             <div class="col-md-10">
-                @Html.TextAreaFor(model => model.Asubject1, new { @class = "form-control", @cols = "200", @rows = "1" })
-                @Html.ValidationMessageFor(model => model.Asubject1, "", new { @class = "text-danger" })
+                @Html.DropDownList("Asubject1")
             </div>
         </div>
-
+     
         @Html.Hidden("Userid", User.Identity.GetUserId());
-
-
 
         <div class="form-group">
             <div class="col-md-offset-2 col-md-10">
@@ -50,6 +45,15 @@
         </div>
     </div>
 }
+
+@*@using (Html.BeginForm("CategoryChosen", "Home", FormMethod.Get))
+{
+    <fieldset>
+        @Html.ListBox("Userid", ViewBag.ArticleSubjects as MultiSelectList)
+    </fieldset>
+}*@ 
+
+
 <div>
     @Html.ActionLink("Back to List", "Index")
 </div>

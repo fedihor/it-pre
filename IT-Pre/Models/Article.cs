@@ -28,5 +28,10 @@ namespace IT_Pre.Models
         public int? Asubject1 { get; set; }
 
         public virtual ArticleSubject ArticleSubject { get; set; }
+
+        //public Article()
+        //{
+        //    ArticleSubject = new HashSet<ArticlePicture>();
+        //}
     }
 }
