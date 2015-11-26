@@ -1,4 +1,5 @@
 ﻿﻿@model IT_Pre.Models.Article
+@using IT_Pre.Models
 @using Microsoft.AspNet.Identity
 @{
     ViewBag.Title = "Edit";
@@ -29,8 +30,29 @@
                 @Html.ValidationMessageFor(model => model.Articletext, "", new { @class = "text-danger" })
             </div>
         </div>
+        <div class="form-group">
+            @Html.LabelFor(model => model.Asubject1, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.DropDownList("Asubject1", null, null, new { @class = "form-control subject-list" })
+            </div>
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(model => model.Proglangs, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                
+                    @foreach (Proglang lang in ViewBag.Proglangs)
+                    {
+                        <label class="checkbox-inline">
+                            <input type="checkbox" name="selectedProglangs" value="@lang.Id"
+                             @(Model.Proglangs.Contains(lang) ? "checked=\"checked\"" : "") /> @lang.Shortname
+                        </label>
+                    }
+                            
+            </div>
+        </div>
+
         @Html.Hidden("UserId", User.Identity.GetUserId())
-        @Html.HiddenFor(model => model.Asubject1)
+
         <div class="form-group">
             <div class="col-md-offset-2 col-md-10">
                 <input type="submit" value="Save" class="btn btn-default" />
@@ -38,6 +60,12 @@
         </div>
     </div>
 }
+
+@if (!String.IsNullOrEmpty(ViewBag.Error))
+{
+    @Html.Raw("<script type='text/javascript'>alert('" + ViewBag.Error + "')</script>")
+}
+
 <div>
     @Html.ActionLink("Back to List", "Index")
 </div>

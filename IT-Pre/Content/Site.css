@@ -23,3 +23,13 @@ textarea {
     max-width: 950px;
 }
 
+.subject-list {
+    width: 945px;
+}
+
+.text-editor {
+    background-color: antiquewhite;
+    margin: 4px 0;
+    text-align: right;
+}
+

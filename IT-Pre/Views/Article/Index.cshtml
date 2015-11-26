@@ -39,3 +39,13 @@
         </tr>
     }
 </table>
+
+@*@foreach (var item in ViewBag.lang)
+{
+    <p>@item.Id @item.Shortname</p>
+}
+
+@foreach (var item in ViewBag.ap)
+{
+    <p>@item.Id @item.Article.Title @item.Proglang.Longname</p>
+}*@

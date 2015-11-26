@@ -27,11 +27,25 @@ namespace IT_Pre.Models
 
         public int? Asubject1 { get; set; }
 
-        public virtual ArticleSubject ArticleSubject { get; set; }
+        public int Viewcounter { get; set; }
 
-        //public Article()
-        //{
-        //    ArticleSubject = new HashSet<ArticlePicture>();
-        //}
+        [Required]
+        public virtual ICollection<Proglang> Proglangs { get; set; }
+
+        public Article()
+        {
+            Proglangs = new List<Proglang>();
+        }
+
+
+
+
+
+        //public virtual ICollection<Article_Proglang> Articles_Proglangs { get; set; }
+
+        //??
+        public virtual ArticleSubject ArticleSubject { get; set; }
+        
+        
     }
 }
