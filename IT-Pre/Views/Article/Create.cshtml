@@ -1,5 +1,5 @@
-﻿﻿@model IT_Pre.Models.Article
-@using Microsoft.AspNet.Identity
+﻿@*﻿@model IT_Pre.Models.Article
+@using Microsoft.AspNet.Identity*@
 @{
     ViewBag.Title = "Create";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -8,98 +8,103 @@
 
 <h2>Create</h2>
 
+@Html.Partial("_CreateEditPartial")
 
+@*
 
-@using (Html.BeginForm())
-{
-    @Html.AntiForgeryToken()
+    @using (Html.BeginForm())
+    {
+        @Html.AntiForgeryToken()
 
-    <div class="form-horizontal" style="border: solid 0px;">
-        <h4>Article</h4>
-        <hr />
-        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
-        <div class="form-group">
-            @Html.LabelFor(model => model.Title, htmlAttributes: new { @class = "control-label col-md-2" })
-            <div class="col-md-10">
-                @Html.TextAreaFor(model => model.Title, new { @class = "form-control", @cols = "200", @rows = "2" })
-                @Html.ValidationMessageFor(model => model.Title, "", new { @class = "text-danger col-md-10" })
-            </div>
-        </div>
-        <div class="form-group">
-            @Html.LabelFor(model => model.Articletext, htmlAttributes: new { @class = "control-label col-md-2" })
-            <div class="col-md-10">
-                <div class="text-editor">
-                    <button onclick="insertTag(document.getElementById('Articletext'), '<ж>', '<\/ж>');" title="Текст жирным" data-toggle="tooltip" data-placement="top" class="btn btn-default btn-sm" type="button">
-                        <b>Ж</b>
-                    </button>
-                    <button onclick="insertTag(document.getElementById('Articletext'), '<н>', '<\/н>');" title="Текст под наклоном" data-toggle="tooltip" data-placement="top" class="btn btn-default btn-sm" type="button">
-                        <i>Н</i>
-                    </button>
-                    <button onclick="insertTag(document.getElementById('Articletext'), '<п>', '<\/п>');" title="Подчеркнутый текст" data-toggle="tooltip" data-placement="top" class="btn btn-default btn-sm" type="button">
-                        <u>П</u>
-                    </button>
-                    <button onclick="insertTag(document.getElementById('Articletext'), '<к>', '<\/к>');" title="Вставить код" data-toggle="tooltip" data-placement="top" class="btn btn-default btn-sm" type="button">
-                        { Код }
-                    </button>
+        <div class="form-horizontal">
+            <h4>Article</h4>
+            <hr />
+            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+            <div class="form-group">
+                @Html.LabelFor(model => model.Title, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    @Html.TextAreaFor(model => model.Title, new { @class = "form-control", @cols = "200", @rows = "2" })
+                    @Html.ValidationMessageFor(model => model.Title, "", new { @class = "text-danger col-md-10" })
                 </div>
-                @Html.TextAreaFor(model => model.Articletext, new { @class = "form-control", @cols = "200", @rows = "15" })
-                @Html.ValidationMessageFor(model => model.Articletext, "", new { @class = "text-danger col-md-10" })
             </div>
-        </div>
-        <div class="form-group">
-            @Html.LabelFor(model => model.Asubject1, htmlAttributes: new { @class = "control-label col-md-2" })
-            <div class="col-md-10">
-                @Html.DropDownList("Asubject1", null, "Укажите тему", new { @class = "form-control subject-list", value = "0" })
-                @Html.ValidationMessage("Asubject1", new { @class = "text-danger col-md-10" })
+            <div class="form-group">
+                @Html.LabelFor(model => model.Articletext, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+
+                    <div class="text-editor">
+                        <button onclick="insertTag(document.getElementById('Articletext'), '<ж>', '<\/ж>');" title="Текст жирным" data-toggle="tooltip" data-placement="top" class="btn btn-default btn-sm" type="button">
+                            <b>Ж</b>
+                        </button>
+                        <button onclick="insertTag(document.getElementById('Articletext'), '<н>', '<\/н>');" title="Текст под наклоном" data-toggle="tooltip" data-placement="top" class="btn btn-default btn-sm" type="button">
+                            <i>Н</i>
+                        </button>
+                        <button onclick="insertTag(document.getElementById('Articletext'), '<п>', '<\/п>');" title="Подчеркнутый текст" data-toggle="tooltip" data-placement="top" class="btn btn-default btn-sm" type="button">
+                            <u>П</u>
+                        </button>
+                        <button onclick="insertTag(document.getElementById('Articletext'), '<к>', '<\/к>');" title="Вставить код" data-toggle="tooltip" data-placement="top" class="btn btn-default btn-sm" type="button">
+                            { Код }
+                        </button>
+                    </div>
+
+                    @Html.TextAreaFor(model => model.Articletext, new { @class = "form-control", @cols = "200", @rows = "15" })
+                    @Html.ValidationMessageFor(model => model.Articletext, "", new { @class = "text-danger col-md-10" })
+                </div>
             </div>
-        </div>
-        <div class="form-group">
-            @*@Html.LabelFor(model => model.Articles_Proglangs, htmlAttributes: new { @class = "control-label col-md-2" })*@
-            <div class="col-md-10">
-                @foreach (var item in ViewBag.Proglangs)
-                {
-                    <label class="checkbox-inline">
-                        @if (item["IsSelected"])
-                        {
-                            @Html.CheckBox("Proglang_Id", true, new { @value = @item["Proglang"].Id }) @item["Proglang"].Shortname
-                        }
-                        else
-                        {
-                            @Html.CheckBox("Proglang_Id", false, new { @value = @item["Proglang"].Id }) @item["Proglang"].Shortname
-                        }
-                    </label>
-                }
+            <div class="form-group">
+                @Html.LabelFor(model => model.Asubject1, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    @Html.DropDownList("Asubject1", null, "Укажите тему", new { @class = "form-control subject-list", value = "0" })
+                    @Html.ValidationMessage("Asubject1", new { @class = "text-danger col-md-10" })
+                </div>
+            </div>
+            <div class="form-group">
+               <div class="col-md-10">
+                    @foreach (var item in ViewBag.Proglangs)
+                    {
+                        <label class="checkbox-inline">
+                            @if (item["IsSelected"])
+                            {
+                                @Html.CheckBox("Proglang_Id", true, new { @value = @item["Proglang"].Id }) @item["Proglang"].Shortname
+                            }
+                            else
+                            {
+                                @Html.CheckBox("Proglang_Id", false, new { @value = @item["Proglang"].Id }) @item["Proglang"].Shortname
+                            }
+                        </label>
+                    }
+                </div>
+            </div>
+
+            @Html.Hidden("Userid", User.Identity.GetUserId())
+
+            <div class="form-group">
+                <div class="col-md-offset-2 col-md-10">
+                    <input type="submit" value="Create" class="btn btn-default" />
+                </div>
             </div>
         </div>
 
-        @Html.Hidden("Userid", User.Identity.GetUserId())
+    }*@
 
-        <div class="form-group">
-            <div class="col-md-offset-2 col-md-10">
-                <input type="submit" value="Create" class="btn btn-default" />
-            </div>
-        </div>
-    </div>
-
-}
-
-@*@using (Html.BeginForm("CategoryChosen", "Home", FormMethod.Get))
+    @*@using (Html.BeginForm("CategoryChosen", "Home", FormMethod.Get))
     {
         <fieldset>
             @Html.ListBox("Userid", ViewBag.ArticleSubjects as MultiSelectList)
         </fieldset>
 }*@
 
-@if (!String.IsNullOrEmpty(ViewBag.Error))
+@*@if (!String.IsNullOrEmpty(ViewBag.Error))
 {
     @Html.Raw("<script type='text/javascript'>alert('" + ViewBag.Error + "')</script>")
-}
+}*@
+
 
 <div>
     @Html.ActionLink("Back to List", "Index")
 </div>
 
-@section Scripts {
+
+@*@section Scripts {
     @Scripts.Render("~/bundles/jqueryval")
 }
 @Scripts.Render("~/scripts/jquery-1.10.2.min.js")
@@ -112,5 +117,5 @@ $(document).ready(function () {
     });
 
 });
-</script>
+</script>*@
 

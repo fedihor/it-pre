@@ -19,7 +19,8 @@
         public virtual DbSet<Article> Articles { get; set; }
         public virtual DbSet<ArticleSubject> ArticleSubjects { get; set; }
         public virtual DbSet<Proglang> Proglangs { get; set; }
-        //public virtual DbSet<Article_Proglang> Articles_Proglangs { get; set; }
+        public virtual DbSet<ArticleImage> ArticleImages { get; set; }
+        public virtual DbSet<Tempimage> Tempimages { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
@@ -37,6 +38,13 @@
                 .WithRequired(e => e.ArticleSubject)
                 .HasForeignKey(e => e.Asubject1)
                 .WillCascadeOnDelete(false);
+
+            modelBuilder.Entity<Article>()
+               .HasMany(e => e.ArticleImages)
+               .WithRequired(e => e.Article)
+               .WillCascadeOnDelete(false);
+
+
 
             //modelBuilder.Entity<Article>()
             //    .HasMany(e => e.Articles_Proglangs)

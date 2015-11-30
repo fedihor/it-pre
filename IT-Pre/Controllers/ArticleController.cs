@@ -10,6 +10,7 @@ using IT_Pre.Models;
 using System.Text;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.AspNet.Identity;
+using System.IO;
 
 namespace IT_Pre.Controllers
 {
@@ -57,96 +58,107 @@ namespace IT_Pre.Controllers
 
         // GET: Article/Create
         [Authorize]
-        public ActionResult Create()
+        public ActionResult Create(int? id)
         {
-            List<Dictionary<string, object>> langs = new List<Dictionary<string, object>>();
-
-            foreach (var lang in db.Proglangs)
+            if (id == null)
             {
-                Dictionary<string, object> dict = new Dictionary<string, object>();
-                dict.Add("Proglang", lang);
-                dict.Add("IsSelected", false);
-                langs.Add(dict);
+                return RedirectToAction("Create/" + new Random().Next(10000, 99999));
             }
 
-            ViewBag.Proglangs = langs;
+            ViewBag.Proglangs = db.Proglangs.ToList();
 
-            ViewBag.Asubject1 = new SelectList(db.ArticleSubjects.OrderBy(s => s.Id), "Id", "Asubject", 1);
+            ViewBag.Asubject1 = CreateSelectList("Выберите тему", "0");
 
-            return View();
+            Article article = new Article()
+            {
+                Id = (int)id
+            };
+
+            return View(article);
         }
 
-        // POST: Article/Create
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
+        private List<SelectListItem> CreateSelectList(string text, string value)
+        {
+            List<SelectListItem> subjectList = new List<SelectListItem>();
+
+            subjectList.Add(new SelectListItem { Text = text, Value = value, Selected = true });
+
+            foreach (var item in db.ArticleSubjects.OrderBy(s => s.Id))
+            {
+                subjectList.Add(new SelectListItem { Text = item.Asubject, Value = item.Id.ToString() });
+            }
+
+            return subjectList;
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ValidateInput(false)]
-        public ActionResult Create([Bind(Include = "Id,Title,Articletext,Userid,Adate,Asubject1,ArticleSubject,Articles_Proglangs")] Article article)
+        public ActionResult Create([Bind(Include = "Id,Title,Articletext,Userid,Adate,Asubject1")] Article article, int[] selectedProglangs)
         {
-            bool validError = false;
-
-            if (string.IsNullOrEmpty(article.Asubject1.ToString()))
+            if (ModelState.IsValid && selectedProglangs != null && article.Asubject1 != 0)
             {
-                validError = true;
-                ModelState.AddModelError("Asubject1", "Укажите тему статьи.");
-            }
-            if (ModelState.IsValid)
-            {
-                db.Articles.Add(article);
-                /*
-                List<Article_Proglang> proglang = new List<Article_Proglang>();
+                article.Proglangs.Clear();
+                article.Id = 0;
 
-                foreach (var lang in Request["Proglang_Id"].Split(','))
+                foreach (var lang in db.Proglangs.Where(l => selectedProglangs.Contains(l.Id)))
                 {
-                    if (lang != "false")
-                    {
-                        proglang.Add(new Article_Proglang()
-                        {
-                            Article = article,
-                            Proglang = db.Proglangs.Find(int.Parse(lang))
-                        });
-                    }
+                    article.Proglangs.Add(lang);
                 }
 
-                db.Articles_Proglangs.AddRange(proglang);
-                */
+                db.Articles.Add(article);
+
                 db.SaveChanges();
 
                 return RedirectToAction("Index");
             }
             else
             {
-                List<Dictionary<string, object>> langs = new List<Dictionary<string, object>>();
-
-                var currentLangs = Request["Proglang_Id"].Split(',').ToList();
-
-                foreach (var lang in db.Proglangs)
+                if (selectedProglangs == null)
                 {
-                    Dictionary<string, object> dict = new Dictionary<string, object>();
-                    dict.Add("Proglang", lang);
-                    if (currentLangs.Contains(lang.Id.ToString()))
-                    {
-                        dict.Add("IsSelected", true);
-                    }
-                    else
-                    {
-                        dict.Add("IsSelected", false);
-                    }
-                    langs.Add(dict);
+                    ModelState.AddModelError("Proglangs", "Укажите языки программирования");
                 }
-                if (!validError)
+                else
                 {
-                    ViewBag.Error = "Произошел сбой при сохранении. Данные не сохранены. Попробуйте еще раз.";
+                    foreach (var lang in db.Proglangs.Where(l => selectedProglangs.Contains(l.Id)))
+                    {
+                        article.Proglangs.Add(lang);
+                    }
                 }
-                ViewBag.Proglangs = langs;
-                ViewBag.Asubject1 = new SelectList(db.ArticleSubjects.OrderBy(s => s.Id), "Id", "Asubject", 1);
 
-                return View(article);
+                if (article.Asubject1 == 0)
+                {
+                    ModelState.AddModelError("Asubject1", "Укажите тему статьи");
+                }
+
+                ViewBag.Asubject1 = CreateSelectList("Выберите тему", "0");
+
+                ViewBag.Proglangs = db.Proglangs.ToList();
+
+                article.Articletext = EncodeString(article.Articletext);
             }
+
+            return View(article);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         }
 
-        // GET: Article/Edit/5
         [Authorize]
         public ActionResult Edit(int? id)
         {
@@ -167,61 +179,30 @@ namespace IT_Pre.Controllers
             StringBuilder sb = new StringBuilder(HttpUtility.HtmlDecode(article.Articletext));
             article.Articletext = sb.ToString();
 
-            ViewBag.Asubject1 = new SelectList(db.ArticleSubjects.OrderBy(s => s.Id), "Id", "Asubject", article.Asubject1);
-/*
-            List<Dictionary<string, object>> langs = new List<Dictionary<string, object>>();
+            var subjectList = new SelectList(db.ArticleSubjects.OrderBy(s => s.Id), "Id", "Asubject", article.Asubject1);
 
-            List<Proglang> currentLangs = new List<Proglang>();
-            
-            foreach (var rticleProglang in article.Articles_Proglangs)
-            {
-                currentLangs.Add(rticleProglang.Proglang);
-            }
-
-            foreach (var lang in db.Proglangs)
-            {
-                Dictionary<string, object> dict = new Dictionary<string, object>();
-                dict.Add("Proglang", lang);
-                if (currentLangs.Contains(lang))
-                {
-                    dict.Add("IsSelected", true);
-                }
-                else
-                {
-                    dict.Add("IsSelected", false);
-                }
-                langs.Add(dict);
-            }
-            ViewBag.Proglangs = langs;*/
+            ViewBag.Asubject1 = subjectList;
 
             return View(article);
         }
 
-        // POST: Article/Edit/5
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize]
         [ValidateInput(false)]
         public ActionResult Edit([Bind(Include = "Id,Title,Articletext,Userid,Adate,Asubject1,Proglangs")] Article article, int[] selectedProglangs)
         {
-            if (ModelState.IsValid)
+            if (ModelState.IsValid && selectedProglangs != null)
             {
-
-
                 Article newAricle = db.Articles.Find(article.Id);
                 newAricle.Title = article.Title;
                 newAricle.Articletext = article.Articletext;
                 newAricle.Asubject1 = article.Asubject1;
                 newAricle.Proglangs.Clear();
 
-                if (selectedProglangs != null)
+                foreach (var lang in db.Proglangs.Where(l => selectedProglangs.Contains(l.Id)))
                 {
-                    foreach (var lang in db.Proglangs.Where(l => selectedProglangs.Contains(l.Id)))
-                    {
-                        newAricle.Proglangs.Add(lang);
-                    }
+                    newAricle.Proglangs.Add(lang);
                 }
 
                 db.Entry(newAricle).State = EntityState.Modified;
@@ -229,62 +210,26 @@ namespace IT_Pre.Controllers
                 db.SaveChanges();
 
                 return RedirectToAction("Index");
-
-
-
-
-
-
-
-                /*
-                List<Article_Proglang> proglang = new List<Article_Proglang>();
-
-                foreach (var lang in Request["Proglang_Id"].Split(','))
-                {
-                    if (lang != "false")
-                    {
-                        proglang.Add(new Article_Proglang()
-                        {
-                            Article = article,
-                            Proglang = db.Proglangs.Find(int.Parse(lang))
-                        });
-                    }
-                }
-                var delItems = db.Articles_Proglangs.Where(art => art.Article.Id == article.Id);
-
-                db.Articles_Proglangs.RemoveRange(delItems);
-
-                db.Articles_Proglangs.AddRange(proglang);
-                */
-
             }
             else
             {
-
-                List<Dictionary<string, object>> langs = new List<Dictionary<string, object>>();
-
-                var currentLangs = Request["Proglang_Id"].Split(',').ToList();
-
-                foreach (var lang in db.Proglangs)
+                if (selectedProglangs == null)
                 {
-                    Dictionary<string, object> dict = new Dictionary<string, object>();
-                    dict.Add("Proglang", lang);
-                    if (currentLangs.Contains(lang.Id.ToString()))
-                    {
-                        dict.Add("IsSelected", true);
-                    }
-                    else
-                    {
-                        dict.Add("IsSelected", false);
-                    }
-                    langs.Add(dict);
+                    //ViewBag.Langerror = "Необходимо указать языки программирования";
+                    ModelState.AddModelError("Proglangs", "Необходимо указать языки программирования+++++++++++++++++++++++");
                 }
-                ViewBag.Proglangs = langs;
+                else
+                {
+                    foreach (var lang in db.Proglangs.Where(l => selectedProglangs.Contains(l.Id)))
+                    {
+                        article.Proglangs.Add(lang);
+                    }
+                }
 
-                ViewBag.Error = "Произошел сбой при сохранении. Данные не сохранены. Попробуйте еще раз.";
+                ViewBag.Asubject1 = new SelectList(db.ArticleSubjects.OrderBy(s => s.Id), "Id", "Asubject", article.Asubject1);
 
-                ViewBag.Asubject1 = new SelectList(db.ArticleSubjects.OrderBy(s => s.Id), "Id", "Asubject", 1);
-                
+                ViewBag.Proglangs = db.Proglangs.ToList();
+
                 article.Articletext = EncodeString(article.Articletext);
             }
 
@@ -362,6 +307,69 @@ namespace IT_Pre.Controllers
             sb.Replace("</п>", @"</u>");
 
             return sb.ToString();
+        }
+
+        [HttpPost]
+        public JsonResult Uploadimg()
+        {
+            Tempimage img = new Tempimage();
+
+            foreach (string file in Request.Files)
+            {
+                var upload = Request.Files[file];
+
+                if (upload.ContentType != "image/jpeg" && upload.ContentType != "image/gif")
+                {
+                    return Json(new { error = "notvalid", message = "Изображение должно быть в формате jpeg или gif" });
+                }
+
+                if (upload.ContentLength > 3 * 1024 * 1024)
+                {
+                    return Json(new { error = "notvalid", message = "Размер файла не должен привышать 2 Мб" });
+                }
+
+                if (upload != null)
+                {
+                    string path = @"/Files/UploadImages/";
+                    //string path = path + System.IO.Path.GetRandomFileName();
+                    string originFileName = System.IO.Path.GetFileName(upload.FileName);
+                    string newFileName = System.IO.Path.GetRandomFileName() + System.IO.Path.GetExtension(originFileName);
+                    //folderName = System.IO.Path.Combine(path, Guid.NewGuid().ToString("N"));
+                    //System.IO.Directory.CreateDirectory(folderName);
+
+                    try
+                    {
+                        upload.SaveAs(Server.MapPath(path + newFileName));
+                    }
+                    catch (Exception ex)
+                    {
+                        return Json(new { error = "exception", message = "Произошол збой при загрузке файла. " + ex });
+                    }
+
+                    img.Userid = HttpContext.User.Identity.GetUserId();
+                    img.Articletempid = int.Parse(Request.Form.GetValues("articleTempId").First());
+                    img.Dir = path;
+                    img.Imgname = newFileName;
+                    string userId = HttpContext.User.Identity.GetUserId();
+                    string conStr = System.Configuration.ConfigurationManager.ConnectionStrings["DefaultConnection"].ToString();
+                    System.Data.SqlClient.SqlConnection connection = new System.Data.SqlClient.SqlConnection(conStr);
+                    connection.Open();
+                    var cmd = new System.Data.SqlClient.SqlCommand("select max(npp) from Tempimages where Userid = '" + userId + 
+                        "' and Articletempid = " + img.Articletempid, connection);
+                    object npp = cmd.ExecuteScalar();
+                    img.Npp = string.IsNullOrEmpty(npp.ToString()) ? 1 : (int)npp + 1;
+
+                    db.Tempimages.Add(img);
+                    db.SaveChanges();
+
+                    connection.Close();
+                }
+                else
+                {
+                    return Json(new { error = "exception", message = "Произошол збой при загрузке файла. Файл не выбран" });
+                }
+            }
+            return Json(new { error = "ok", message = "Файл успешно сохранен", dir = img.Dir, fileName = img.Imgname, npp = img.Npp });
         }
     }
 }

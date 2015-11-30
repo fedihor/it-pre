@@ -1,0 +1,202 @@
+﻿@model IT_Pre.Models.Article
+@using IT_Pre.Models
+@using Microsoft.AspNet.Identity
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+
+    <div class="form-horizontal">
+        <h4>Article @Model.Id</h4>
+        <hr />
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+        @if (Model != null)
+        {
+            @Html.HiddenFor(model => model.Id)
+        }
+        
+        <div class="form-group">
+            @Html.LabelFor(model => model.Title, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.Title, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.Title, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(model => model.Articletext, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+
+                <div class="text-editor">
+                    <button onclick="insertTag(document.getElementById('Articletext'), '<ж>', '<\/ж>');" title="Текст жирным" data-toggle="tooltip" data-placement="top" class="btn btn-default btn-sm" type="button">
+                        <b>Ж</b>
+                    </button>
+                    <button onclick="insertTag(document.getElementById('Articletext'), '<н>', '<\/н>');" title="Текст под наклоном" data-toggle="tooltip" data-placement="top" class="btn btn-default btn-sm" type="button">
+                        <i>Н</i>
+                    </button>
+                    <button onclick="insertTag(document.getElementById('Articletext'), '<п>', '<\/п>');" title="Подчеркнутый текст" data-toggle="tooltip" data-placement="top" class="btn btn-default btn-sm" type="button">
+                        <u>П</u>
+                    </button>
+                    <button onclick="insertTag(document.getElementById('Articletext'), '<к>', '<\/к>');" title="Вставить код" data-toggle="tooltip" data-placement="top" class="btn btn-default btn-sm" type="button">
+                        { Код }
+                    </button>
+                </div>
+
+                @Html.TextAreaFor(model => model.Articletext, new { @class = "form-control", @cols = "200", rows = "15" })
+                @Html.ValidationMessageFor(model => model.Articletext, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(model => model.Asubject1, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.DropDownList("Asubject1", null, null, new { @class = "form-control subject-list" })
+                @Html.ValidationMessage("Asubject1", new { @class = "text-danger" })
+            </div>
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(model => model.Proglangs, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @foreach (Proglang lang in ViewBag.Proglangs)
+                {
+                    <label class="checkbox-inline">
+                        <input class="checkbox-validation" type="checkbox" name="selectedProglangs" value="@lang.Id"
+                               @if (Model != null) { @(Model.Proglangs.Contains(lang) ? "checked=\"checked\"" : "")  } /> @lang.Shortname
+                        </label>
+                }
+                <br />
+                @Html.ValidationMessage("Proglangs", new { @id = "langerror", @class = "text-danger" })
+            </div>
+        </div>
+
+        @*<legend>Добавить изображение</legend>
+
+            <div class="editor-label">Название</div>
+            <div class="editor-field">
+                @Html.EditorFor(model => model.ArticleImages)
+                @Html.ValidationMessageFor(model => model.ArticleImages)
+            </div>
+
+            <div class="editor-label">Файл изображения</div>
+            <div class="editor-field">
+                <input type="file" name="uploadImage" />
+            </div>*@
+
+
+
+        @*@foreach (ArticleImage img in Model.ArticleImages)
+                    {
+                <label class="checkbox-inline">
+                    @img.Title @img.Name
+                </label>
+            }*@
+
+
+        @Html.Hidden("UserId", User.Identity.GetUserId())
+
+      
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <input id="button" type="submit" value="Save" class="btn btn-default" />
+            </div>
+        </div>
+    </div>
+}
+
+<div>
+    <input type="file" name="upload" id="uploadImg" /><span id="uploadImgResult"></span><br />
+    <button id="uploadImgButton">Загрузить</button>
+</div>
+
+<div class="uploaded-img" id="uploaded-img"></div>
+
+@Scripts.Render("~/scripts/jquery-1.10.2.min.js")
+@Scripts.Render("~/Scripts/site.js")
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+
+        // подсказка бутстрап для кнопок редактора текста
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip()
+        });
+
+        // валидация чекбокса языков программирования
+        $("#button").click(function () {
+            var isChecked = false;
+            $(".checkbox-validation").each(function () {
+                if (this.checked == true) {
+                    isChecked = true;
+                }
+            });
+            if (isChecked == false)
+            {
+                $("#langerror").html("Необходимо указать языки программирования");
+                return false;
+            }
+            else
+            {
+                $("#langerror").html("");
+            }
+        });
+
+
+
+
+
+        // асинхронная загрузка файлов в папку
+        $('#uploadImgButton').on('click', function (e) {
+            e.preventDefault();
+            var files = document.getElementById('uploadImg').files;
+            if (files.length > 0) {
+                if (window.FormData !== undefined) {
+                    var data = new FormData();
+                    for (var x = 0; x < files.length; x++) {
+                        data.append("file" + x, files[x]);
+                    }
+
+                    data.append("articleTempId", document.getElementById('Id').value);
+
+                    $.ajax({
+                        type: "POST",
+                        url: '@Url.Action("Uploadimg", "Article")',
+                        contentType: false,
+                        processData: false,
+                        data: data,
+                        success: function (result) {
+                            if (result.error == "ok")
+                            {
+                                $('#uploadImgResult').html(result.message);
+                                insertTag(document.getElementById('Articletext'), '<и имя="' + result.npp + '">', '<\/и>');
+                                $('.uploaded-img').append("<img src=\"" + result.dir + result.fileName +
+                                    "\" alt=\"Загруженный файл " + result.npp + "\" width=\"200\">");
+                            }
+                            if (result.error == "notvalid")
+                            {
+                                $('#uploadImgResult').html(result.message);
+                            }
+                            if (result.error == "exception")
+                            {
+                                alert(result.message);
+                            }
+                    },
+                        error: function (xhr, status, p3) {
+                            $('#uploadImgResult').html("Произошел збой при загрузке файла. Размер файла не должен превышать 2 Мб. Изображение должно быть в формате jpeg или gif.");
+                        }
+                    });
+                } else {
+                    alert("Браузер не поддерживает загрузку файлов HTML5");
+                }
+            }
+        });
+
+
+
+
+
+
+    });
+</script>

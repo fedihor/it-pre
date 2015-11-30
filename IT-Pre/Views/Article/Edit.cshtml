@@ -1,74 +1,15 @@
-﻿﻿@model IT_Pre.Models.Article
-@using IT_Pre.Models
-@using Microsoft.AspNet.Identity
-@{
+﻿@{
     ViewBag.Title = "Edit";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 <h2>Edit</h2>
 
-@using (Html.BeginForm())
-{
-    @Html.AntiForgeryToken()
-
-    <div class="form-horizontal">
-        <h4>Article</h4>
-        <hr />
-        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
-        @Html.HiddenFor(model => model.Id)
-        <div class="form-group">
-            @Html.LabelFor(model => model.Title, htmlAttributes: new { @class = "control-label col-md-2" })
-            <div class="col-md-10">
-                @Html.EditorFor(model => model.Title, new { htmlAttributes = new { @class = "form-control" } })
-                @Html.ValidationMessageFor(model => model.Title, "", new { @class = "text-danger" })
-            </div>
-        </div>
-        <div class="form-group">
-            @Html.LabelFor(model => model.Articletext, htmlAttributes: new { @class = "control-label col-md-2" })
-            <div class="col-md-10">
-                @Html.TextAreaFor(model => model.Articletext, new { @class = "form-control", @cols = "200", rows = "15" })
-                @Html.ValidationMessageFor(model => model.Articletext, "", new { @class = "text-danger" })
-            </div>
-        </div>
-        <div class="form-group">
-            @Html.LabelFor(model => model.Asubject1, htmlAttributes: new { @class = "control-label col-md-2" })
-            <div class="col-md-10">
-                @Html.DropDownList("Asubject1", null, null, new { @class = "form-control subject-list" })
-            </div>
-        </div>
-        <div class="form-group">
-            @Html.LabelFor(model => model.Proglangs, htmlAttributes: new { @class = "control-label col-md-2" })
-            <div class="col-md-10">
-                
-                    @foreach (Proglang lang in ViewBag.Proglangs)
-                    {
-                        <label class="checkbox-inline">
-                            <input type="checkbox" name="selectedProglangs" value="@lang.Id"
-                             @(Model.Proglangs.Contains(lang) ? "checked=\"checked\"" : "") /> @lang.Shortname
-                        </label>
-                    }
-                            
-            </div>
-        </div>
-
-        @Html.Hidden("UserId", User.Identity.GetUserId())
-
-        <div class="form-group">
-            <div class="col-md-offset-2 col-md-10">
-                <input type="submit" value="Save" class="btn btn-default" />
-            </div>
-        </div>
-    </div>
-}
-
-@if (!String.IsNullOrEmpty(ViewBag.Error))
-{
-    @Html.Raw("<script type='text/javascript'>alert('" + ViewBag.Error + "')</script>")
-}
+@Html.Partial("_CreateEditPartial")
 
 <div>
     @Html.ActionLink("Back to List", "Index")
 </div>
-@section Scripts {
-    @Scripts.Render("~/bundles/jqueryval")
-}
+
+
+
+

@@ -32,16 +32,15 @@ namespace IT_Pre.Models
         [Required]
         public virtual ICollection<Proglang> Proglangs { get; set; }
 
+        public virtual ICollection<ArticleImage> ArticleImages { get; set; }
+
+
         public Article()
         {
             Proglangs = new List<Proglang>();
         }
 
 
-
-
-
-        //public virtual ICollection<Article_Proglang> Articles_Proglangs { get; set; }
 
         //??
         public virtual ArticleSubject ArticleSubject { get; set; }
