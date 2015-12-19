@@ -1,0 +1,53 @@
+﻿@using IT_Pre.Models
+﻿@model IT_Pre.Models.Article
+<script src="https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js"></script>
+<link href="~/Content/myprettify.css" rel="stylesheet" />
+@{
+    ViewBag.Title = "Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<h2>Details</h2>
+<div>
+    <h4>Article</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.Title)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.Title)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.Articletext)
+        </dt>
+        <dd>
+            @Html.Raw(Model.Articletext)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ArticleSubject)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.ArticleSubject.Asubject)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.Proglangs)
+        </dt>
+        <dd>
+            @foreach (Proglang c in Model.Proglangs)
+            {
+                @c.Shortname 
+            }
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.Viewcounter)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.Viewcounter)
+        </dd>
+    </dl>
+</div>
+<p>
+    @Html.ActionLink("Edit", "Edit", new { id = Model.Id }) |
+    @Html.ActionLink("Back to List", "Index")
+</p>

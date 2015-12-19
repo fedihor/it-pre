@@ -44,7 +44,12 @@ namespace IT_Pre.Models
 
         //??
         public virtual ArticleSubject ArticleSubject { get; set; }
-        
-        
+    }
+
+    public class ArticleAdditionData
+    {
+        public List<SelectListItem> Asubjects { get; set; }
+        public List<Proglang> Proglangs { get; set; }
+        public List<Tempimage> Tempimages { get; set; }
     }
 }
