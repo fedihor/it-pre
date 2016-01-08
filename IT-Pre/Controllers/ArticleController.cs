@@ -11,6 +11,7 @@ using System.Text;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.AspNet.Identity;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace IT_Pre.Controllers
 {
@@ -21,11 +22,6 @@ namespace IT_Pre.Controllers
         // GET: Article
         public ActionResult Index()
         {
-            HttpCookie c = new HttpCookie("TIME");
-            //c.Value = "3TIME";
-            c.Expires = DateTime.Now.AddDays(-6d);
-            Response.Cookies.Add(c);
-
             return View(db.Articles.ToList());
         }
 
@@ -70,20 +66,57 @@ namespace IT_Pre.Controllers
                 return RedirectToAction("Create/" + new Random().Next(10000, 99999));
             }
 
-            Article article = new Article()
-            {
-                Id = (int)id
-            };
-
-            ArticleAdditionData articleAdditionData = new ArticleAdditionData();
-
-            GetCurrentArticleData(article, articleAdditionData);
-
-            ViewBag.Asubject1 = articleAdditionData.Asubjects;
-
-            ViewBag.articleAdditionData = articleAdditionData;
+            Article article = CreateEdit(id, true);
 
             return View(article);
+        }
+
+        [Authorize]
+        public ActionResult Edit(int? id)
+        {
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+
+            Article article = CreateEdit(id, false);
+
+            if (article == null)
+            {
+                return HttpNotFound();
+            }
+
+            return View(article);
+        }
+
+        private Article CreateEdit(int? id, bool isNew)
+        {
+            Article article;
+
+            if (isNew)
+            {
+                article = new Article()
+                {
+                    Id = (int)id
+                };
+            }
+            else
+            {
+                article = db.Articles.Find(id);
+
+                if (article != null)
+                {
+                    StringBuilder sb = new StringBuilder(HttpUtility.HtmlDecode(article.Articletext));
+                    article.Articletext = sb.ToString();
+                }
+            }
+
+            ArticleAdditionData articleAdditionData = new ArticleAdditionData();
+            GetCurrentArticleData(article, articleAdditionData);
+            ViewBag.Asubject1 = articleAdditionData.Asubjects;
+            ViewBag.articleAdditionData = articleAdditionData;
+
+            return article;
         }
 
         private void GetCurrentArticleData(Article article, ArticleAdditionData articleAdditionData)
@@ -126,7 +159,7 @@ namespace IT_Pre.Controllers
             string userId = User.Identity.GetUserId();
 
             articleAdditionData.Tempimages = db.Tempimages.Where(e => e.Userid == userId)
-                .Where(e => e.Articletempid == article.Id).ToList();
+                .Where(e => e.Article_Id == article.Id).ToList();
         }
 
         private List<SelectListItem> CreateSelectList(string text, string value, string selected = "0")
@@ -155,9 +188,23 @@ namespace IT_Pre.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize]
         [ValidateInput(false)]
-        public ActionResult Create([Bind(Include = "Id,Title,Articletext,Userid,Adate,Asubject1")] Article article, int[] selectedProglangs)
+        public ActionResult Create([Bind(Include = "Id,Title,Articletext,Userid,Adate,Asubject1,Proglangs")] Article article, int[] selectedProglangs)
         {
+
+            bool saveResult = CreateEdit(article, selectedProglangs, true);
+
+            if (saveResult)
+            {
+                return RedirectToAction("Index");
+            }
+            ViewBag.Asubjects = ViewBag.articleAdditionData.Asubjects;
+            ViewBag.d = ViewBag.Asubject1[1].Selected;
+
+            /*
+            bool error = false;
+
             if (ModelState.IsValid && selectedProglangs != null && article.Asubject1 != 0)
             {
                 int tempId = article.Id;
@@ -169,16 +216,40 @@ namespace IT_Pre.Controllers
                     article.Proglangs.Add(lang);
                 }
 
-                db.Articles.Add(article);
+                Article newArticle = db.Articles.Add(article);
 
                 db.SaveChanges();
 
+                string imgResult = SaveImages(newArticle, tempId);
+
+                ArticleRate articlerate = new ArticleRate()
+                {
+                    Article = newArticle,
+                    //Article_Id = newArticle.Id,
+                    Plus = 10,
+                    Minus = 7
+                };
+
+                db.ArticleRates.Add(articlerate);
+                db.SaveChanges();
+
+                if (imgResult.CompareTo("true") != 0)
+                {
+                    ModelState.AddModelError("Images", "Произошел сбой при сохранении изображений. Попробуйте еще раз. " + imgResult);
+                    error = true;
+                }
+
                 removeArticleCookies(tempId);
 
-                return RedirectToAction("Index");
+                if (!error)
+                {
+                    return RedirectToAction("Index");
+                }
             }
             else
             {
+                error = true;
+
                 if (selectedProglangs == null)
                 {
                     ModelState.AddModelError("Proglangs", "Укажите языки программирования");
@@ -189,104 +260,28 @@ namespace IT_Pre.Controllers
                     {
                         article.Proglangs.Add(lang);
                     }
-                }
+                } 
 
                 if (article.Asubject1 == 0)
                 {
                     ModelState.AddModelError("Asubject1", "Укажите тему статьи");
                 }
+            }
 
-
-
+            if (error)
+            {
                 ArticleAdditionData articleAdditionData = new ArticleAdditionData();
 
                 GetCurrentArticleData(article, articleAdditionData);
-
-                //articleAdditionData.Proglangs = db.Proglangs.ToList();
-                //articleAdditionData.Asubjects = CreateSelectList("Выберите тему", "0");
-                //string userId = User.Identity.GetUserId();
-                //articleAdditionData.Tempimages = db.Tempimages.Where(e => e.Userid == userId)
-                //    .Where(e => e.Articletempid == article.Id).ToList();
-                //GetCurrentArticleData(article, articleAdditionData);
 
                 ViewBag.Asubject1 = articleAdditionData.Asubjects;
 
                 ViewBag.articleAdditionData = articleAdditionData;
 
-
-
-                //ViewBag.Asubject1 = CreateSelectList("Выберите тему", "0");
-
-                //ViewBag.Proglangs = db.Proglangs.ToList();
-
                 article.Articletext = EncodeString(article.Articletext);
             }
-
-            return View(article);
-        }
-
-        [Authorize]
-        public ActionResult Edit(int? id)
-        {
-            if (id == null)
-            {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
-            }
-
-            Article article = db.Articles.Find(id);
-
-            if (article == null)
-            {
-                return HttpNotFound();
-            }
-
-            //ViewBag.Proglangs = db.Proglangs.ToList();
-
-            StringBuilder sb = new StringBuilder(HttpUtility.HtmlDecode(article.Articletext));
-            article.Articletext = sb.ToString();
-
-            //var subjectList = new SelectList(db.ArticleSubjects.OrderBy(s => s.Id), "Id", "Asubject", article.Asubject1);
-
-            //ViewBag.Asubject1 = subjectList;
-
-
-
-            ArticleAdditionData articleAdditionData = new ArticleAdditionData();
-
-            GetCurrentArticleData(article, articleAdditionData);
-
-            ViewBag.Asubject1 = articleAdditionData.Asubjects;
-
-            ViewBag.articleAdditionData = articleAdditionData;
-
-
-
-
-            return View(article);
-        }
-
-        private void removeArticleCookies(int id)
-        {
-            if (Request.Cookies["Title" + id] != null)
-            {
-                HttpCookie my_Cookie = new HttpCookie("Title" + id);
-                my_Cookie.Expires = DateTime.Now.AddDays(10d);
-                //my_Cookie.Value = "VVAALLUUEE";
-                Response.Cookies.Add(my_Cookie);
-            }
-
-            HttpCookie myCookie = new HttpCookie("Articletext" + id);
-            myCookie.Expires = DateTime.Now.AddDays(10d);
-            Response.Cookies.Add(myCookie);
-
-            /*
-            HttpCookie asubject1Cookie = HttpContext.Request.Cookies.Get("Asubject1" + id);
-            HttpCookie proglangsCookie = HttpContext.Request.Cookies.Get("selectedProglangs" + id);
-
-            HttpContext.Response.Cookies.Remove("Title" + id);
-            HttpContext.Response.Cookies.Remove("Articletext" + id);
-            HttpContext.Response.Cookies.Remove("Asubject1" + id);
             */
+            return View(article);
         }
 
         [HttpPost]
@@ -295,6 +290,13 @@ namespace IT_Pre.Controllers
         [ValidateInput(false)]
         public ActionResult Edit([Bind(Include = "Id,Title,Articletext,Userid,Adate,Asubject1,Proglangs")] Article article, int[] selectedProglangs)
         {
+            bool saveResult = CreateEdit(article, selectedProglangs, false);
+
+            if (saveResult)
+            {
+                return RedirectToAction("Index");
+            }
+            /*
             if (ModelState.IsValid && selectedProglangs != null)
             {
                 Article newAricle = db.Articles.Find(article.Id);
@@ -329,15 +331,310 @@ namespace IT_Pre.Controllers
                     }
                 }
 
+
+                ArticleAdditionData articleAdditionData = new ArticleAdditionData();
+
+                GetCurrentArticleData(article, articleAdditionData);
+
+                ViewBag.articleAdditionData = articleAdditionData;
+
                 ViewBag.Asubject1 = new SelectList(db.ArticleSubjects.OrderBy(s => s.Id), "Id", "Asubject", article.Asubject1);
 
-                ViewBag.Proglangs = db.Proglangs.ToList();
+                //ViewBag.Proglangs = db.Proglangs.ToList();
 
                 article.Articletext = EncodeString(article.Articletext);
-            }
+            }*/
 
             return View(article);
         }
+
+        private bool CreateEdit(Article article, int[] selectedProglangs, bool isNew = true)
+        {
+            bool error = false;
+
+            List<string> errImgTags = GetErrImgTags(article);
+
+            if (ModelState.IsValid && selectedProglangs != null && article.Asubject1 != 0 && errImgTags == null)
+            {
+                Article newArticle;
+                int tempId = article.Id;
+
+                if (isNew)
+                {
+                    newArticle = new Article();
+                }
+                else
+                {
+                    newArticle = db.Articles.Find(article.Id);
+                    newArticle.Proglangs.Clear();
+                }
+
+                newArticle.Title = article.Title;
+                newArticle.Articletext = article.Articletext;
+                newArticle.Asubject1 = article.Asubject1;
+                newArticle.Userid = article.Userid;
+
+                foreach (var lang in db.Proglangs.Where(l => selectedProglangs.Contains(l.Id)))
+                {
+                    newArticle.Proglangs.Add(lang);
+                }
+
+                if (isNew)
+                {
+                    newArticle = db.Articles.Add(newArticle);
+                    ArticleRate articlerate = new ArticleRate()
+                    {
+                        Article = newArticle,
+                        Plus = 0,
+                        Minus = 0
+                    };
+                    db.ArticleRates.Add(articlerate);
+                }
+                else
+                {
+                    db.Entry(newArticle).State = EntityState.Modified;
+                }
+
+                db.SaveChanges();
+
+                string imgResult = SaveImages(newArticle, tempId);
+
+                if (imgResult.CompareTo("true") != 0)
+                {
+                    ModelState.AddModelError("Images", "Произошел сбой при сохранении изображений. Попробуйте еще раз. " + imgResult);
+                    error = true;
+                }
+
+                removeArticleCookies(tempId);
+
+                if (!error)
+                {
+                    return true;
+                    //return RedirectToAction("Index");
+                }
+            }
+            else
+            {
+                error = true;
+
+                if (selectedProglangs == null)
+                {
+                    ModelState.AddModelError("Proglangs", "Укажите языки программирования");
+                }
+                else
+                {
+                    foreach (var lang in db.Proglangs.Where(l => selectedProglangs.Contains(l.Id)))
+                    {
+                        article.Proglangs.Add(lang);
+                    }
+                }
+
+                if (article.Asubject1 == 0)
+                {
+                    ModelState.AddModelError("Asubject1", "Укажите тему статьи");
+                }
+
+                if (errImgTags != null)
+                {
+                    ModelState.AddModelError("Articletext", "В статье находятся ошибочно вставленные теги изображения: " + String.Join(", ", errImgTags));
+                }
+            }
+
+            if (error)
+            {
+                ArticleAdditionData articleAdditionData = new ArticleAdditionData();
+
+                GetCurrentArticleData(article, articleAdditionData);
+
+                ViewBag.Asubject1 = articleAdditionData.Asubjects;
+
+                ViewBag.articleAdditionData = articleAdditionData;
+
+                //article.Articletext = EncodeString(article.Articletext);
+                //article.Asubject1 = int.Parse(articleAdditionData.Asubjects.Where(i => i.Selected == true).First().Value);
+                //article_Asubject1
+            }
+
+            return false;
+
+        }
+
+        //регулярні вирази для пошуку в тексті тегів зображення та виявлення помилково внесених тегів зображення
+        private Regex imgTagPattern = new Regex(@"<и([0-9]+)>(.*?)</и>", RegexOptions.IgnoreCase);
+        private Regex imgOpenTagPattern = new Regex(@"<и[0-9]+>", RegexOptions.IgnoreCase);
+        private Regex imgCloseTagPattern = new Regex(@"</и>", RegexOptions.IgnoreCase);
+
+        private List<string> GetErrImgTags(Article newArticle)
+        {
+            if (newArticle.Articletext != null)
+            {
+                List<string> errTags = new List<string>();
+
+                foreach (var item in imgTagPattern.Matches(newArticle.Articletext))
+                {
+                    int countImgTagErr = imgOpenTagPattern.Matches(item.ToString()).Count;
+
+                    if (countImgTagErr > 1)
+                    {
+                        errTags.Add(@"""" + item.ToString() + @"""");
+                    }
+                }
+
+                StringBuilder artTxtWithoutImgTags = new StringBuilder(imgTagPattern.Replace(newArticle.Articletext, String.Empty));
+
+                foreach (var item in imgOpenTagPattern.Matches(artTxtWithoutImgTags.ToString()))
+                {
+                    errTags.Add(@"""" + item.ToString() + @"""");
+                }
+                foreach (var item in imgCloseTagPattern.Matches(artTxtWithoutImgTags.ToString()))
+                {
+                    errTags.Add(@"""" + item.ToString() + @"""");
+                }
+
+                string userId = HttpContext.User.Identity.GetUserId();
+
+                List<int> allImgsNpp = new List<int>();
+
+                foreach (var tempimage in db.Tempimages.Where(i => i.Article_Id == newArticle.Id).Where(i => i.Userid == userId).ToList())
+                {
+                    allImgsNpp.Add(tempimage.Npp);
+                }
+                foreach (var articleImage in db.ArticleImages.Where(i => i.Article.Id == newArticle.Id).Where(i => i.Userid == userId).ToList())
+                {
+                    allImgsNpp.Add(articleImage.Npp);
+                }
+
+                foreach (Match imgTag in Regex.Matches(newArticle.Articletext, imgTagPattern.ToString(), RegexOptions.IgnoreCase))
+                {
+                    int imgTagNpp = Convert.ToInt32(imgTag.Groups[1].Value);
+
+                    if (!allImgsNpp.Contains(imgTagNpp))
+                    {
+                        errTags.Add(@"""" + imgTag.ToString() + @""" (изображения с таким номером нет)");
+                    }
+                }
+
+                return errTags.Count == 0 ? null : errTags;
+            }
+
+            return null;
+        }
+
+        // зберігаємо закачані картинки з тимчасової папки в постійну базу данних
+        private string SaveImages(Article newArticle, int tempId)
+        {
+            string userId = User.Identity.GetUserId();
+
+            List<string> imgTags = new List<string>();
+
+            int nextNpp = GetNextImgNpp(newArticle.Id, "ArticleImages");
+
+            foreach (Match imgTag in Regex.Matches(newArticle.Articletext, imgTagPattern.ToString(), RegexOptions.IgnoreCase))
+            {
+                int imgTagNpp = Convert.ToInt32(imgTag.Groups[1].Value);
+
+                Tempimage tempimg = db.Tempimages.Where(i => i.Article_Id == tempId).Where(i => i.Npp == imgTagNpp).Where(i => i.Userid == userId).First();
+
+                if (tempimg == null)
+                {
+                    continue;
+                }
+
+                byte[] imageData = null;
+
+                try
+                {
+                    using (FileStream fs = new FileStream(Server.MapPath("~" + tempimg.Dir + tempimg.Imgname), FileMode.Open))
+                    {
+                        imageData = new byte[fs.Length];
+                        fs.Read(imageData, 0, imageData.Length);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    return "Error when reading images in FileStream " + ex.Message;
+                }
+
+                ArticleImage img = new ArticleImage
+                {
+                    Article = newArticle,
+                    Imgtitle = imgTag.Groups[2].Value,
+                    Imgname = tempimg.Imgname,
+                    Imgfile = imageData,
+                    Npp = nextNpp++,
+                    Imgdate = DateTime.Now,
+                    Userid = newArticle.Userid
+                };
+
+                ArticleImage addImgResul = new ArticleImage();
+
+                try
+                {
+                    addImgResul = db.ArticleImages.Add(img);
+                    db.SaveChanges();
+                }
+                catch (Exception ex)
+                {
+                    return "Error when adding image to ArticleImages " + ex.Message;
+                }
+
+                try
+                {
+                    if (addImgResul != null)
+                    {
+                        db.Tempimages.Remove(tempimg);
+                        db.SaveChanges();
+
+                        try
+                        {
+                            string tempImgToDelete = Request.MapPath("~" + tempimg.Dir + tempimg.Imgname);
+
+                            if (System.IO.File.Exists(tempImgToDelete))
+                            {
+                                System.IO.File.Delete(tempImgToDelete);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            return "Error when deleting image file from temp dir " + ex.Message;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    return "Error when Removing image from Tempimages " + ex.Message;
+                }
+            }
+
+            return "true";
+        }
+
+        private int GetNextImgNpp(int articleId, string tableName, string userId = "")
+        {
+            int nextNpp = 0;
+
+            string conStr = System.Configuration.ConfigurationManager.ConnectionStrings["DefaultConnection"].ToString();
+            System.Data.SqlClient.SqlConnection connection = new System.Data.SqlClient.SqlConnection(conStr);
+
+            connection.Open();
+
+            string query = @"select max(npp) from " + tableName + " where Article_Id = " + articleId;
+
+            if (!string.IsNullOrEmpty(userId))
+            {
+                query += " and  Userid = '" + userId + "'";
+            }
+
+            var cmd = new System.Data.SqlClient.SqlCommand(query, connection);
+            object maxNpp = cmd.ExecuteScalar();
+            nextNpp = string.IsNullOrEmpty(maxNpp.ToString()) ? 1 : (int)maxNpp + 1;
+
+            connection.Close();
+
+            return nextNpp;
+        }
+
+
 
         // GET: Article/Delete/5
         [Authorize]
@@ -364,10 +661,23 @@ namespace IT_Pre.Controllers
         public ActionResult DeleteConfirmed(int id)
         {
             Article article = db.Articles.Find(id);
+
+
+
+            //var connection = AdoDbConnection();
+            //connection.Open();
+            //int delLangResult = DeleteFromSqlTable("Articles_Proglangs", "Article_Id", article.Id.ToString(), connection);
+            //int delTagResult = DeleteFromSqlTable("Articles_Tags", "Article_Id", article.Id.ToString(), connection);
+            //connection.Close();
+
+            article.DeleteReferencedRows();
+
             db.Articles.Remove(article);
             db.SaveChanges();
             return RedirectToAction("Index");
         }
+
+
 
         protected override void Dispose(bool disposing)
         {
@@ -417,6 +727,10 @@ namespace IT_Pre.Controllers
         {
             Tempimage img = new Tempimage();
 
+            string pathToDir = @"C:\Users\Ihor\Documents\Visual Studio 2015\Projects\it-pre\IT-Pre\Files\UploadImages\";
+            string newDirName = Request.Form.GetValues("Article_Id").First(); //Path.GetRandomFileName();
+            DirectoryInfo newDir = Directory.CreateDirectory(pathToDir + newDirName + @"\");
+
             foreach (string file in Request.Files)
             {
                 var upload = Request.Files[file];
@@ -433,10 +747,10 @@ namespace IT_Pre.Controllers
 
                 if (upload != null)
                 {
-                    string path = @"/Files/UploadImages/";
+                    string path = @"/Files/UploadImages/" + newDirName + @"/";
                     //string path = path + System.IO.Path.GetRandomFileName();
-                    string originFileName = System.IO.Path.GetFileName(upload.FileName);
-                    string newFileName = System.IO.Path.GetRandomFileName() + System.IO.Path.GetExtension(originFileName);
+                    string originFileName = Path.GetFileName(upload.FileName);
+                    string newFileName = Path.GetRandomFileName() + Path.GetExtension(originFileName);
                     //folderName = System.IO.Path.Combine(path, Guid.NewGuid().ToString("N"));
                     //System.IO.Directory.CreateDirectory(folderName);
 
@@ -450,22 +764,27 @@ namespace IT_Pre.Controllers
                     }
 
                     img.Userid = HttpContext.User.Identity.GetUserId();
-                    img.Articletempid = int.Parse(Request.Form.GetValues("articleTempId").First());
+                    img.Article_Id = int.Parse(Request.Form.GetValues("Article_Id").First());
                     img.Dir = path;
                     img.Imgname = newFileName;
                     string userId = HttpContext.User.Identity.GetUserId();
-                    string conStr = System.Configuration.ConfigurationManager.ConnectionStrings["DefaultConnection"].ToString();
-                    System.Data.SqlClient.SqlConnection connection = new System.Data.SqlClient.SqlConnection(conStr);
-                    connection.Open();
-                    var cmd = new System.Data.SqlClient.SqlCommand("select max(npp) from Tempimages where Userid = '" + userId +
-                        "' and Articletempid = " + img.Articletempid, connection);
-                    object npp = cmd.ExecuteScalar();
-                    img.Npp = string.IsNullOrEmpty(npp.ToString()) ? 1 : (int)npp + 1;
+
+                    //int nextTempNpp = GetNextImgNpp(img.Article_Id, "Tempimages", userId);
+
+                    //string conStr = System.Configuration.ConfigurationManager.ConnectionStrings["DefaultConnection"].ToString();
+                    //System.Data.SqlClient.SqlConnection connection = new System.Data.SqlClient.SqlConnection(conStr);
+                    //connection.Open();
+                    //var cmd = new System.Data.SqlClient.SqlCommand("select max(npp) from Tempimages where Userid = '" + userId +
+                    //    "' and Article_Id = " + img.Article_Id, connection);
+                    //object npp = cmd.ExecuteScalar();
+                    //img.Npp = string.IsNullOrEmpty(npp.ToString()) ? 1 : (int)npp + 1;
+
+                    img.Npp = GetNextImgNpp(img.Article_Id, "Tempimages", userId);
 
                     db.Tempimages.Add(img);
                     db.SaveChanges();
 
-                    connection.Close();
+                    //connection.Close();
                 }
                 else
                 {
@@ -474,5 +793,33 @@ namespace IT_Pre.Controllers
             }
             return Json(new { error = "ok", message = "Файл успешно сохранен", dir = img.Dir, fileName = img.Imgname, npp = img.Npp });
         }
+
+        private void removeArticleCookies(int id)
+        {
+            /*
+            if (Request.Cookies["Title" + id] != null)
+            {
+                HttpCookie my_Cookie = new HttpCookie("Title" + id);
+                my_Cookie.Expires = DateTime.Now.AddDays(10d);
+                //my_Cookie.Value = "VVAALLUUEE";
+                Response.Cookies.Add(my_Cookie);
+            }
+
+            HttpCookie myCookie = new HttpCookie("Articletext" + id);
+            myCookie.Expires = DateTime.Now.AddDays(10d);
+            Response.Cookies.Add(myCookie);
+            */
+            /*
+            HttpCookie asubject1Cookie = HttpContext.Request.Cookies.Get("Asubject1" + id);
+            HttpCookie proglangsCookie = HttpContext.Request.Cookies.Get("selectedProglangs" + id);
+
+            HttpContext.Response.Cookies.Remove("Title" + id);
+            HttpContext.Response.Cookies.Remove("Articletext" + id);
+            HttpContext.Response.Cookies.Remove("Asubject1" + id);
+            */
+        }
     }
+
+
+
 }

@@ -10,6 +10,7 @@ namespace IT_Pre.Controllers
     {
         public ActionResult Index()
         {
+            //System.IO.DirectoryInfo di = System.IO.Directory.CreateDirectory(@"C:\Users\Ihor\Documents\Visual Studio 2015\Projects\it-pre\IT-Pre\Files\UploadImages\DELETE");
             return View();
         }
 

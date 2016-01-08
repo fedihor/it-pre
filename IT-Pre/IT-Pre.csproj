@@ -172,6 +172,7 @@
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\Article.cs" />
     <Compile Include="Models\ArticleImage.cs" />
+    <Compile Include="Models\ArticleRate.cs" />
     <Compile Include="Models\ArticleSubject.cs" />
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\ItpreEntities.cs" />

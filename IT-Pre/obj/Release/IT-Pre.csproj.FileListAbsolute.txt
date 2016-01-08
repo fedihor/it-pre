@@ -52,3 +52,4 @@ C:\Users\Ihor\Documents\Visual Studio 2015\Projects\it-pre\IT-Pre\bin\Microsoft.
 C:\Users\Ihor\Documents\Visual Studio 2015\Projects\it-pre\IT-Pre\bin\Microsoft.Owin.Security.MicrosoftAccount.xml
 C:\Users\Ihor\Documents\Visual Studio 2015\Projects\it-pre\IT-Pre\obj\Release\IT-Pre.dll
 C:\Users\Ihor\Documents\Visual Studio 2015\Projects\it-pre\IT-Pre\obj\Release\IT-Pre.pdb
+C:\Users\Ihor\Documents\Visual Studio 2015\Projects\it-pre\IT-Pre\obj\Release\IT-Pre.csprojResolveAssemblyReference.cache

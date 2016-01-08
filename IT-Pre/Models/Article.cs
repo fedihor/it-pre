@@ -34,16 +34,27 @@ namespace IT_Pre.Models
 
         public virtual ICollection<ArticleImage> ArticleImages { get; set; }
 
+        public virtual ICollection<ArticleRate> ArticleRates { get; set; }
 
         public Article()
         {
             Proglangs = new List<Proglang>();
+            ArticleImages = new List<ArticleImage>();
+            ArticleRates = new List<ArticleRate>();
         }
-
-
 
         //??
         public virtual ArticleSubject ArticleSubject { get; set; }
+
+
+        public void DeleteReferencedRows()
+        {
+            var connection = DeleteTableRows.AdoDbConnection();
+            connection.Open();
+            int delLangResult = DeleteTableRows.DeleteFromSqlTable("Articles_Proglangs", "Article_Id", this.Id.ToString(), connection);
+            int delTagResult = DeleteTableRows.DeleteFromSqlTable("Articles_Tags", "Article_Id", this.Id.ToString(), connection);
+            connection.Close();
+        }
     }
 
     public class ArticleAdditionData

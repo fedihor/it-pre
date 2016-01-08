@@ -15,11 +15,12 @@
         {
             @Html.HiddenFor(model => model.Id)
         }
-        
+
         <div class="form-group">
             @Html.LabelFor(model => model.Title, htmlAttributes: new { @class = "control-label col-md-2" })
             <div class="col-md-10">
-                @Html.EditorFor(model => model.Title, new { htmlAttributes = new { @class = "form-control" } })
+                @*@Html.EditorFor(model => model.Title, new { htmlAttributes = new { @class = "form-control" } })*@
+                <input  id="Title" name="Title" type="text" value="Title @Model.Title" class="form-control text-box single-line" data-val="true" data-val-length="The field Title must be a string with a maximum length of 400." data-val-length-max="400" data-val-required="The Title field is required." />
                 @Html.ValidationMessageFor(model => model.Title, "", new { @class = "text-danger" })
             </div>
         </div>
@@ -49,15 +50,32 @@
                         <input type="file" name="upload" id="uploadImg" />
                     </div>
                 </div>
-
-                @Html.TextAreaFor(model => model.Articletext, new { @class = "form-control", @cols = "200", rows = "15" })
+                @*@Html.TextAreaFor(model => model.Articletext, new { @class = "form-control", @cols = "200", rows = "15" })*@
+                @*@Html.TextArea("Articletext", Model.Articletext,  new { @class = "form-control", @cols = "200", rows = "15", @id = "Articletext_" })*@
+                <textarea id="Articletext" name="Articletext" rows="15" cols="200" class="form-control" data-val="true" data-val-required="The Articletext field is required.">Text @Model.Articletext</textarea>
                 @Html.ValidationMessageFor(model => model.Articletext, "", new { @class = "text-danger" })
             </div>
         </div>
-        <div class="form-group">
+        
+        @*<div class="form-group">
             @Html.LabelFor(model => model.Asubject1, htmlAttributes: new { @class = "control-label col-md-2" })
             <div class="col-md-10">
                 @Html.DropDownList("Asubject1", null, null, new { @class = "form-control subject-list" })
+                @Html.ValidationMessage("Asubject1", new { @class = "text-danger" })
+            </div>
+        </div>*@
+        <div class="form-group">
+            @Html.LabelFor(model => model.Asubject1, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                <select class="form-control subject-list" id="Asubject1" name="Asubject1">
+                @if (ViewBag.articleAdditionData != null)
+                {
+                    foreach (var subject in ViewBag.articleAdditionData.Asubjects)
+                    {
+                        <option @(subject.Selected == true ? "selected=\"selected\"" : "") value="@subject.Value">@subject.Text</option>
+                    }
+                }
+                </select>
                 @Html.ValidationMessage("Asubject1", new { @class = "text-danger" })
             </div>
         </div>
@@ -81,7 +99,8 @@
 
         @Html.Hidden("UserId", User.Identity.GetUserId())
 
-      
+        @Html.ValidationMessage("Images", new { @id = "imgerror", @class = "text-danger" })
+
         <div class="form-group">
             <div class="col-md-offset-2 col-md-10">
                 <input id="button" type="submit" value="Save" class="btn btn-default" />
@@ -93,9 +112,9 @@
 <div class="uploaded-img-place" id="uploaded-img-place">
     @if(ViewBag.articleAdditionData != null && ViewBag.articleAdditionData.Tempimages.Count != 0)
     {
-        foreach (Tempimage tenpImg in ViewBag.articleAdditionData.Tempimages)
+        foreach (Tempimage tempImg in ViewBag.articleAdditionData.Tempimages)
         {
-            <img class="uploade-img-preview" src="@tenpImg.Dir@tenpImg.Imgname" alt="Загруженный файл @tenpImg.Npp" />
+            <img class="uploade-img-preview" src="@tempImg.Dir@tempImg.Imgname" alt="Загруженный файл @tempImg.Npp" />
         }
     }
 </div>
@@ -123,7 +142,7 @@
         value = value.replace(/>/g, '(&gt)');
         var cookie_date = new Date();
         cookie_date.setDate(cookie_date.getDate() + 2);
-        document.cookie = name + "=name=" + value + ";expires=" + cookie_date.toUTCString() + ";";
+        document.cookie = name + "=" + value + ";expires=" + cookie_date.toUTCString() + ";";
     }
 
     // удаление куки
@@ -178,10 +197,6 @@
             }
         });
 
-
-
-
-
         // асинхронная загрузка файлов в папку
         $('#uploadImg').on('change', function (e) {
             e.preventDefault();
@@ -193,7 +208,7 @@
                         data.append("file" + x, files[x]);
                     }
 
-                    data.append("articleTempId", document.getElementById('Id').value);
+                    data.append("Article_Id", document.getElementById('Id').value);
 
                     $.ajax({
                         type: "POST",
@@ -228,11 +243,5 @@
                 }
             }
         });
-
-
-
-
-
-
     });
 </script>

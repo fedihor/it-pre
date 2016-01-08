@@ -16,19 +16,23 @@ namespace IT_Pre.Models
         [Required]
         [Key]
         [Column(Order = 1)]
-        public int Articletempid { get; set; }
+        public int Article_Id { get; set; }
 
         [Required]
         [StringLength(256)]
         public string Dir { get; set; }
 
-        [Key]
-        [Column(Order = 2)]
         [Required]
         [StringLength(60)]
         public string Imgname { get; set; }
 
+        public string Imgtext { get; set; }
+
+        [Key]
+        [Column(Order = 2)]
         [Required]
         public int Npp { get; set; }
+
+        //public DateTime Imgdate { get; set; }
     }
 }
