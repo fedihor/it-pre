@@ -7,7 +7,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IT_Pre.Models
 {
-    public class Tempimage
+    /*public class Tempimage
     {
         [Required]
         [StringLength(128)]
@@ -34,5 +34,5 @@ namespace IT_Pre.Models
         public int Npp { get; set; }
 
         //public DateTime Imgdate { get; set; }
-    }
+    }*/
 }

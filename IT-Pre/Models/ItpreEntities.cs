@@ -17,10 +17,12 @@
         //}
 
         public virtual DbSet<Article> Articles { get; set; }
+        public virtual DbSet<DraftArticle> DraftArticles { get; set; }
         public virtual DbSet<ArticleSubject> ArticleSubjects { get; set; }
         public virtual DbSet<Proglang> Proglangs { get; set; }
         public virtual DbSet<ArticleImage> ArticleImages { get; set; }
-        public virtual DbSet<Tempimage> Tempimages { get; set; }
+        public virtual DbSet<DraftArticleImage> DraftArticleImages { get; set; }
+        //public virtual DbSet<Tempimage> Tempimages { get; set; }
         public virtual DbSet<ArticleRate> ArticleRates { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)

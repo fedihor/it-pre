@@ -110,11 +110,11 @@
 }
 
 <div class="uploaded-img-place" id="uploaded-img-place">
-    @if(ViewBag.articleAdditionData != null && ViewBag.articleAdditionData.Tempimages.Count != 0)
+    @if(ViewBag.articleAdditionData != null && ViewBag.articleAdditionData.DraftArticleImags.Count != 0)
     {
-        foreach (Tempimage tempImg in ViewBag.articleAdditionData.Tempimages)
+        foreach (DraftArticleImage tempImg in ViewBag.articleAdditionData.DraftArticleImages)
         {
-            <img class="uploade-img-preview" src="@tempImg.Dir@tempImg.Imgname" alt="Загруженный файл @tempImg.Npp" />
+            <img class="uploade-img-preview" src="@tempImg.Imgdir@tempImg.Imgname" alt="Загруженный файл @tempImg.Npp" />
         }
     }
 </div>

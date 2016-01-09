@@ -67,6 +67,7 @@ namespace IT_Pre.Controllers
             }
 
             Article article = CreateEdit(id, true);
+            //DraftArticle article = CreateEdit(id, true);
 
             return View(article);
         }
@@ -158,7 +159,7 @@ namespace IT_Pre.Controllers
 
             string userId = User.Identity.GetUserId();
 
-            articleAdditionData.Tempimages = db.Tempimages.Where(e => e.Userid == userId)
+            articleAdditionData.DraftArticleImags = db.DraftArticleImages.Where(e => e.Userid == userId)
                 .Where(e => e.Article_Id == article.Id).ToList();
         }
 
@@ -495,7 +496,7 @@ namespace IT_Pre.Controllers
 
                 List<int> allImgsNpp = new List<int>();
 
-                foreach (var tempimage in db.Tempimages.Where(i => i.Article_Id == newArticle.Id).Where(i => i.Userid == userId).ToList())
+                foreach (var tempimage in db.DraftArticleImages.Where(i => i.Article_Id == newArticle.Id).Where(i => i.Userid == userId).ToList())
                 {
                     allImgsNpp.Add(tempimage.Npp);
                 }
@@ -533,7 +534,7 @@ namespace IT_Pre.Controllers
             {
                 int imgTagNpp = Convert.ToInt32(imgTag.Groups[1].Value);
 
-                Tempimage tempimg = db.Tempimages.Where(i => i.Article_Id == tempId).Where(i => i.Npp == imgTagNpp).Where(i => i.Userid == userId).First();
+                DraftArticleImage tempimg = db.DraftArticleImages.Where(i => i.Article_Id == tempId).Where(i => i.Npp == imgTagNpp).Where(i => i.Userid == userId).First();
 
                 if (tempimg == null)
                 {
@@ -544,7 +545,7 @@ namespace IT_Pre.Controllers
 
                 try
                 {
-                    using (FileStream fs = new FileStream(Server.MapPath("~" + tempimg.Dir + tempimg.Imgname), FileMode.Open))
+                    using (FileStream fs = new FileStream(Server.MapPath("~" + tempimg.Imgdir + tempimg.Imgname), FileMode.Open))
                     {
                         imageData = new byte[fs.Length];
                         fs.Read(imageData, 0, imageData.Length);
@@ -582,12 +583,12 @@ namespace IT_Pre.Controllers
                 {
                     if (addImgResul != null)
                     {
-                        db.Tempimages.Remove(tempimg);
+                        db.DraftArticleImages.Remove(tempimg);
                         db.SaveChanges();
 
                         try
                         {
-                            string tempImgToDelete = Request.MapPath("~" + tempimg.Dir + tempimg.Imgname);
+                            string tempImgToDelete = Request.MapPath("~" + tempimg.Imgdir + tempimg.Imgname);
 
                             if (System.IO.File.Exists(tempImgToDelete))
                             {
@@ -725,7 +726,8 @@ namespace IT_Pre.Controllers
         [HttpPost]
         public JsonResult Uploadimg()
         {
-            Tempimage img = new Tempimage();
+            //Tempimage img = new Tempimage();
+            DraftArticleImage img = new DraftArticleImage();
 
             string pathToDir = @"C:\Users\Ihor\Documents\Visual Studio 2015\Projects\it-pre\IT-Pre\Files\UploadImages\";
             string newDirName = Request.Form.GetValues("Article_Id").First(); //Path.GetRandomFileName();
@@ -765,8 +767,9 @@ namespace IT_Pre.Controllers
 
                     img.Userid = HttpContext.User.Identity.GetUserId();
                     img.Article_Id = int.Parse(Request.Form.GetValues("Article_Id").First());
-                    img.Dir = path;
+                    img.Imgdir = path;
                     img.Imgname = newFileName;
+                    img.Imgdate = DateTime.Now;
                     string userId = HttpContext.User.Identity.GetUserId();
 
                     //int nextTempNpp = GetNextImgNpp(img.Article_Id, "Tempimages", userId);
@@ -779,9 +782,9 @@ namespace IT_Pre.Controllers
                     //object npp = cmd.ExecuteScalar();
                     //img.Npp = string.IsNullOrEmpty(npp.ToString()) ? 1 : (int)npp + 1;
 
-                    img.Npp = GetNextImgNpp(img.Article_Id, "Tempimages", userId);
+                    img.Npp = GetNextImgNpp(img.Article_Id, "DraftArticleImages", userId);
 
-                    db.Tempimages.Add(img);
+                    db.DraftArticleImages.Add(img);
                     db.SaveChanges();
 
                     //connection.Close();
@@ -791,7 +794,7 @@ namespace IT_Pre.Controllers
                     return Json(new { error = "exception", message = "Произошол збой при загрузке файла. Файл не выбран" });
                 }
             }
-            return Json(new { error = "ok", message = "Файл успешно сохранен", dir = img.Dir, fileName = img.Imgname, npp = img.Npp });
+            return Json(new { error = "ok", message = "Файл успешно сохранен", dir = img.Imgdir, fileName = img.Imgname, npp = img.Npp });
         }
 
         private void removeArticleCookies(int id)

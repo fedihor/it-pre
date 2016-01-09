@@ -61,6 +61,6 @@ namespace IT_Pre.Models
     {
         public List<SelectListItem> Asubjects { get; set; }
         public List<Proglang> Proglangs { get; set; }
-        public List<Tempimage> Tempimages { get; set; }
+        public List<DraftArticleImage> DraftArticleImags { get; set; }
     }
 }

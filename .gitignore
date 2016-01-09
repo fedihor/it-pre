@@ -2,6 +2,10 @@
 # Ignore any file named foo.txt.
 ITPRE.mdf
 LogITPRE.ldf
+.gitignore
 # Ignore (generated) html files,
 # *.html
 IT-Pre/Files/
+IT-Pre/Files/*
+Files/
+/Files/*
