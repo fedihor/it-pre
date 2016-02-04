@@ -9,6 +9,7 @@ namespace IT_Pre.Models
 
     public partial class Article
     {
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
         [Required]

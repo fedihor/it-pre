@@ -26,11 +26,7 @@ namespace IT_Pre.Models
         {
             Articles = new List<Article>();
         }
-
-
-
-
-
+        
         //???
         //public virtual ICollection<Article_Proglang> Articles_Proglangs { get; set; }
 

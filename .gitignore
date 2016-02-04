@@ -6,6 +6,4 @@ LogITPRE.ldf
 # Ignore (generated) html files,
 # *.html
 IT-Pre/Files/
-IT-Pre/Files/*
 Files/
-/Files/*

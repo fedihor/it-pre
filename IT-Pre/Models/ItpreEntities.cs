@@ -35,12 +35,27 @@
                 .MapRightKey("Proglang_Id")
                 .ToTable("Articles_Proglangs"));
 
-
             modelBuilder.Entity<ArticleSubject>()
                 .HasMany(e => e.Articles)
                 .WithRequired(e => e.ArticleSubject)
                 .HasForeignKey(e => e.Asubject1)
                 .WillCascadeOnDelete(false);
+
+            
+
+            //modelBuilder.Entity<Article>()
+            //.Map(m =>
+            //{
+            //    m.MapInheritedProperties();
+            //    m.ToTable("Articles");
+            //});
+
+            //modelBuilder.Entity<DraftArticle>()
+            //.Map(m =>
+            //{
+            //    m.MapInheritedProperties();
+            //    m.ToTable("DraftArticles");
+            //});
 
             //modelBuilder.Entity<ArticleRate>()
             //    .HasRequired(e => e.Article)

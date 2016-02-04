@@ -61,13 +61,18 @@ namespace IT_Pre.Controllers
         [Authorize]
         public ActionResult Create(int? id)
         {
+            //DraftArticle draftArticle;
+
             if (id == null)
             {
-                return RedirectToAction("Create/" + new Random().Next(10000, 99999));
+                DraftArticle draftArticle = db.DraftArticles.Add(new DraftArticle());
+                db.SaveChanges();
+                return RedirectToAction("Create/" + draftArticle.Id.ToString());
+                //return RedirectToAction("Create/" + new Random().Next(10000, 99999));
             }
 
+            //Article article = CreateEdit(id, true);
             Article article = CreateEdit(id, true);
-            //DraftArticle article = CreateEdit(id, true);
 
             return View(article);
         }
@@ -103,6 +108,25 @@ namespace IT_Pre.Controllers
             }
             else
             {
+                DraftArticle draftArticleIsExists = db.DraftArticles.Where(i => i.Article_Id == id).FirstOrDefault();
+
+                if (draftArticleIsExists == null)
+                {
+                    DraftArticle draftArticle = new DraftArticle()
+                    {
+                        Article_Id = (int)id
+                    };
+                    draftArticle = db.DraftArticles.Add(draftArticle);
+
+                    db.SaveChanges();
+
+                    ViewBag.IsDraftExists = false;
+                }
+                else
+                {
+                    ViewBag.IsDraftExists = true;
+                }
+
                 article = db.Articles.Find(id);
 
                 if (article != null)
@@ -445,7 +469,7 @@ namespace IT_Pre.Controllers
             {
                 ArticleAdditionData articleAdditionData = new ArticleAdditionData();
 
-                GetCurrentArticleData(article, articleAdditionData);
+                //GetCurrentArticleData(article, articleAdditionData);
 
                 ViewBag.Asubject1 = articleAdditionData.Asubjects;
 
